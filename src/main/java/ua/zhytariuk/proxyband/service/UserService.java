@@ -1,16 +1,15 @@
 package ua.zhytariuk.proxyband.service;
 
-import static java.lang.String.format;
-
 import java.util.List;
-import java.util.Objects;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ua.zhytariuk.proxyband.exception.BadRequestException;
+import org.springframework.transaction.annotation.Transactional;
 import ua.zhytariuk.proxyband.models.User;
 import ua.zhytariuk.proxyband.repository.UserRepository;
+import ua.zhytariuk.proxyband.service.validation.UserCreatedValidator;
+import ua.zhytariuk.proxyband.service.validation.UserUpdatedValidator;
 
 /**
  * TODO: Change class description
@@ -24,6 +23,10 @@ public class UserService {
 
     @NonNull
     private final UserRepository userRepository;
+    @NonNull
+    private final UserCreatedValidator userCreatedValidator;
+    @NonNull
+    private final UserUpdatedValidator userUpdatedValidator;
 
     public List<User> findAll() {
         return userRepository.findAll();
@@ -38,24 +41,19 @@ public class UserService {
         userRepository.deleteById(email);
     }
 
+    @Transactional
     public User update(final String email, final User user) {
-        if (user == null || email == null || user.getEmail() == null) {
-            throw new BadRequestException("User or email is not valid");
-        }
-
-        if (!Objects.equals(user.getEmail(), email)) {
-            final User existed = findById(user.getEmail());
-
-            if (existed != null) {
-                throw new BadRequestException
-                        (format("Cannot update user, because user with email: [%s] already exist", user.getEmail()));
-            }
-        }
+        userUpdatedValidator.email(email)
+                            .updated(user)
+                            .validate();
 
         return userRepository.save(user);
     }
 
     public User save(final User user) {
+        userCreatedValidator.user(user)
+                            .validate();
+
         return userRepository.insert(user);
     }
 }
