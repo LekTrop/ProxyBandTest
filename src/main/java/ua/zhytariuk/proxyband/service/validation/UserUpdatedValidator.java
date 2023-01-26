@@ -17,13 +17,8 @@ import ua.zhytariuk.proxyband.service.UserService;
 @Component
 public class UserUpdatedValidator extends AbstractUserValidator {
 
-    private UserService userService;
     private String email;
     private User updated;
-
-    public UserUpdatedValidator(final @Lazy UserService userService) {
-        this.userService = userService;
-    }
 
     public UserUpdatedValidator email(final String email) {
         this.email = email;
